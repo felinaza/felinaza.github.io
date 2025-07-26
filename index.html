@@ -41,7 +41,9 @@
       { esp: "chumpi", que: "chumpi", r: 139, g: 69, b: 19 }
     ];
 
-    navigator.mediaDevices.getUserMedia({ video: true })
+    navigator.mediaDevices.getUserMedia({ video: {
+      facingMode: { exact: "environment" }
+    })
       .then(stream => video.srcObject = stream)
       .catch(err => alert("No se pudo acceder a la cámara: " + err));
 
