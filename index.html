@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Detector de Colores Quechua</title>
+  <style>
+    body { text-align: center; font-family: sans-serif; background: #f0f0f0; }
+    video { border: 3px solid black; border-radius: 10px; }
+    #colorBox { width: 50px; height: 50px; display: inline-block; border: 2px solid #333; margin-top: 10px; }
+    #colorName { font-size: 30px; margin-top: 10px; color: #222; }
+  </style>
+</head>
+<body>
+
+  <h1>Colores en Quechua</h1>
+  <video id="video" width="300" height="225" autoplay></video>
+  <br>
+  <canvas id="canvas" width="300" height="225" style="display: none;"></canvas>
+  <div id="colorBox"></div>
+  <div id="colorName">Color</div>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const colorBox = document.getElementById('colorBox');
+    const colorName = document.getElementById('colorName');
+    const ctx = canvas.getContext('2d');
+
+    // Diccionario: Español -> Quechua
+    const colores = [
+      { esp: "Puka", que: "puka", r: 255, g: 0, b: 0 },
+      { esp: "Coomer", que: "q'omer", r: 0, g: 255, b: 0 },
+      { esp: "ancas", que: "anqas", r: 0, g: 0, b: 255 },
+      { esp: "kellu", que: "q'illu", r: 255, g: 255, b: 0 },
+      { esp: "willapu", que: "willapu", r: 255, g: 165, b: 0 },
+      { esp: "mullu", que: "mullu", r: 255, g: 192, b: 203 },
+      { esp: "kulli", que: "kulli", r: 128, g: 0, b: 128 },
+      { esp: "yana", que: "yana", r: 0, g: 0, b: 0 },
+      { esp: "yuraq", que: "yuraq", r: 255, g: 255, b: 255 },
+      { esp: "oqhee", que: "uqi", r: 128, g: 128, b: 128 },
+      { esp: "chumpi", que: "chumpi", r: 139, g: 69, b: 19 }
+    ];
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(err => alert("No se pudo acceder a la cámara: " + err));
+
+    function distanciaColor(c1, c2) {
+      return Math.sqrt(
+        Math.pow(c1.r - c2.r, 2) +
+        Math.pow(c1.g - c2.g, 2) +
+        Math.pow(c1.b - c2.b, 2)
+      );
+    }
+
+    function encontrarColor(r, g, b) {
+      let minDist = Infinity;
+      let color = { esp: "desconocido", que: "unkuchkan" };
+      for (const c of colores) {
+        const dist = distanciaColor({r, g, b}, c);
+        if (dist < minDist) {
+          minDist = dist;
+          color = c;
+        }
+      }
+      return color;
+    }
+
+    function detectarColor() {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const pixel = ctx.getImageData(centerX, centerY, 1, 1).data;
+      const [r, g, b] = pixel;
+      const colorRGB = `rgb(${r}, ${g}, ${b})`;
+      colorBox.style.background = colorRGB;
+
+      const colorDetectado = encontrarColor(r, g, b);
+      colorName.textContent = colorDetectado.que;
+
+      // Voz en español
+      const utter = new SpeechSynthesisUtterance(colorDetectado.esp);
+      utter.lang = 'es-ES';
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utter);
+    }
+
+    setInterval(detectarColor, 2000); // cada 2 segundos
+  </script>
+</body>
+</html>
